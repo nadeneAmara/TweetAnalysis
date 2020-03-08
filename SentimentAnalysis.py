@@ -1,4 +1,6 @@
 import twitter
+import csv
+import time
 
 # initialize API instance
 twitter_api = twitter.Api(consumer_key= 'TXX58RuQCDKrR6WKOrDSuhhTp',
@@ -16,3 +18,42 @@ def buildTestSet(search_keyword):
 	except:
 		print("Something went wrong")
 		return None
+
+search_term = input("Enter a search keyword:")
+testDataSet = buildTestSet(search_term)
+print(testDataSet[0:4])
+
+def buildTrainingSet(corpusFile, tweetDataFile):
+
+	corpus = []
+
+	with open(corpusFile, 'rb') as csvfile:
+		lineReader = csv.reader(csvfile,delimiter=',', quotechar="\"")
+		for row in lineReader:
+			corpus.append({"tweet_id":row[2], "label":row[1], "topic":row[0]})
+
+	# max number of requests = 180, time window = 900s
+	rate = 180
+	sleep_time = 900/180
+
+	trainingDataSet = []
+
+	for tweet in corpus:
+		try:
+			status = twitter_api.GetStatus(tweet["tweet_id"])
+			print("Tweet returned" + status.text)
+			tweet["text"] = status.text
+			trainingDataSet.append(tweet)
+			time.sleep(sleep_time)
+		except:
+			continue 
+
+	# write to CSV file		
+	with open(tweetDataFile, 'wb') as csv_file:
+		lineWriter = csv.writer(csv_file, delimiter=',',quotechar="\"")
+		for tweet in trainingDataSet:
+			try:
+				lineWriter.writerow([tweet["tweet_id"], tweet["text"], tweet["label"], tweet["topic"]])
+			except Exception as e:
+				print(e)
+	return trainingDataSet
