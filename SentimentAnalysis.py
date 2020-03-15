@@ -11,7 +11,7 @@ twitter_api = twitter.Api(consumer_key= 'TXX58RuQCDKrR6WKOrDSuhhTp',
 def buildTestSet(search_keyword): 
 	try:
 		tweets_returned = twitter_api.GetSearch(search_keyword, count = 100)
-		print("Returned" + str(len(tweets_returned)) + " tweets for the term " + search_keyword)
+		print("Returned " + str(len(tweets_returned)) + " tweets for the term " + search_keyword)
 
 		return [{"text":status.text, "label":None} for status in tweets_returned]
 
@@ -27,8 +27,8 @@ def buildTrainingSet(corpusFile, tweetDataFile):
 
 	corpus = []
 
-	with open(corpusFile, 'rb') as csvfile:
-		lineReader = csv.reader(csvfile,delimiter=',', quotechar="\"")
+	with open(corpusFile, 'r') as csvfile:
+		lineReader = csv.reader(csvfile, delimiter=',', quotechar="\"")
 		for row in lineReader:
 			corpus.append({"tweet_id":row[2], "label":row[1], "topic":row[0]})
 
@@ -41,7 +41,7 @@ def buildTrainingSet(corpusFile, tweetDataFile):
 	for tweet in corpus:
 		try:
 			status = twitter_api.GetStatus(tweet["tweet_id"])
-			print("Tweet returned" + status.text)
+			print("Tweet returned " + status.text)
 			tweet["text"] = status.text
 			trainingDataSet.append(tweet)
 			time.sleep(sleep_time)
@@ -49,7 +49,7 @@ def buildTrainingSet(corpusFile, tweetDataFile):
 			continue 
 
 	# write to CSV file		
-	with open(tweetDataFile, 'wb') as csv_file:
+	with open(tweetDataFile, 'w') as csv_file:
 		lineWriter = csv.writer(csv_file, delimiter=',',quotechar="\"")
 		for tweet in trainingDataSet:
 			try:
@@ -57,3 +57,8 @@ def buildTrainingSet(corpusFile, tweetDataFile):
 			except Exception as e:
 				print(e)
 	return trainingDataSet
+
+	
+corpusFile = "/Users/nadeneabuamara/Downloads/corpus.csv"
+tweetDataFile = "/Users/nadeneabuamara/Downloads/TweetAnalysis/tweetDataFile.csv"
+trainingData = buildTrainingSet(corpusFile, tweetDataFile)
