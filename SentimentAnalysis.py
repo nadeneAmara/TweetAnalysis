@@ -2,6 +2,11 @@ import twitter
 import csv
 import time
 
+import re
+from nltk.corpus import stopwords 
+from nltk.tokenize import word_tokenize 
+from string import punctuation 
+
 # initialize API instance
 twitter_api = twitter.Api(consumer_key= 'TXX58RuQCDKrR6WKOrDSuhhTp',
 						 consumer_secret= 'llAoZ4hA0HPOUg3wVhLVL5beULvn9nYkmrErhB1YaxwXzpm9od',
@@ -62,3 +67,21 @@ def buildTrainingSet(corpusFile, tweetDataFile):
 corpusFile = "/Users/nadeneabuamara/Downloads/corpus.csv"
 tweetDataFile = "/Users/nadeneabuamara/Downloads/TweetAnalysis/tweetDataFile.csv"
 trainingData = buildTrainingSet(corpusFile, tweetDataFile)
+
+class PreProcessTweets:
+
+	def __init__(self):
+		self.stop_words = set(stopwords.words('english') + list(punctuation) + ['AT_USER', 'URL'])
+
+	def getProcessedTweets(self, tweetList):
+		processedTweets = []
+		for tweet in tweetList:
+			processedTweets.append((self.processTweet(tweet["text"]), tweet["label"]))
+			
+	def processTweet(self, tweet):
+		tweet = tweet.lower()
+		tweet = re.sub('((www\.[^\s]+)|(https?://[^\s]+))', 'URL', tweet) # remove URLs
+		tweet = re.sub('@[^\s]+', 'AT_USER', tweet) # remove usernames
+		tweet = re.sub(r'#([^\s]+)', r'\1', tweet) # remove the # in hashtag
+		tweet = word_tokenize(tweet)
+		return [word for word in tweet if word not in self.stop_words]
