@@ -2,6 +2,7 @@ import twitter
 import csv
 import time
 
+import nltk
 import re
 from nltk.corpus import stopwords 
 from nltk.tokenize import word_tokenize 
@@ -77,7 +78,8 @@ class PreProcessTweets:
 		processedTweets = []
 		for tweet in tweetList:
 			processedTweets.append((self.processTweet(tweet["text"]), tweet["label"]))
-			
+		return processedTweets
+
 	def processTweet(self, tweet):
 		tweet = tweet.lower()
 		tweet = re.sub('((www\.[^\s]+)|(https?://[^\s]+))', 'URL', tweet) # remove URLs
@@ -85,3 +87,19 @@ class PreProcessTweets:
 		tweet = re.sub(r'#([^\s]+)', r'\1', tweet) # remove the # in hashtag
 		tweet = word_tokenize(tweet)
 		return [word for word in tweet if word not in self.stop_words]
+
+
+tweetPreProcessor = PreProcessTweets()
+preProcessedTrainingSet = tweetPreProcessor.getProcessedTweets(trainingData)
+preProcessedTestSet = tweetPreProcessor.getProcessedTweets(testDataSet)
+
+def buildVocabulary(preProcessedTrainingSet):
+	word_list = []
+	for (words, sentiment) in preProcessedTrainingSet:
+		word_list.extend(words)
+
+	wordlist = nltk.FreqDist(word_list)
+	features = wordlist.keys()
+
+	return features
+	
