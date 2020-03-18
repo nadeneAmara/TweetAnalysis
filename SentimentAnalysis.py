@@ -6,6 +6,7 @@ import nltk
 import re
 from nltk.corpus import stopwords 
 from nltk.tokenize import word_tokenize 
+from nltk.classify import apply_features
 from string import punctuation 
 
 # initialize API instance
@@ -44,6 +45,7 @@ def buildTrainingSet(corpusFile, tweetDataFile):
 
 	trainingDataSet = []
 
+    # using tweet id, get tweet text and store in training set
 	for tweet in corpus:
 		try:
 			status = twitter_api.GetStatus(tweet["tweet_id"])
@@ -81,7 +83,7 @@ class PreProcessTweets:
 		return processedTweets
 
 	def processTweet(self, tweet):
-		tweet = tweet.lower()
+		tweet = tweet.lower() # make tweets lowercase
 		tweet = re.sub('((www\.[^\s]+)|(https?://[^\s]+))', 'URL', tweet) # remove URLs
 		tweet = re.sub('@[^\s]+', 'AT_USER', tweet) # remove usernames
 		tweet = re.sub(r'#([^\s]+)', r'\1', tweet) # remove the # in hashtag
@@ -95,11 +97,26 @@ preProcessedTestSet = tweetPreProcessor.getProcessedTweets(testDataSet)
 
 def buildVocabulary(preProcessedTrainingSet):
 	word_list = []
+	# Add training tweet words to list
 	for (words, sentiment) in preProcessedTrainingSet:
 		word_list.extend(words)
 
 	wordlist = nltk.FreqDist(word_list)
-	features = wordlist.keys()
+	# Key is frequency with which word shows up
+	word_features = wordlist.keys()
 
+	return word_features
+
+def extract_features(tweet):
+	tweet_text = set(tweet)
+	features = {}
+	# if word is in vocab, give label of 1, else 0
+	for word in word_features:
+		features['contains(%s' %word] = (word in tweet_text)
 	return features
-	
+
+# Build feature vector
+word_features = buildVocabulary(preProcessedTrainingSet)
+trainingFeatures = apply_features(extract_features, preProcessedTrainingSet)
+
+NBayesClassifier = nltk.NaiveBayesClassifier.train(trainingFeatures)
