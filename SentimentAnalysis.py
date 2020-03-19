@@ -119,4 +119,4 @@ def extract_features(tweet):
 word_features = buildVocabulary(preProcessedTrainingSet)
 trainingFeatures = apply_features(extract_features, preProcessedTrainingSet)
 
-NBayesClassifier = nltk.NaiveBayesClassifier.train(trainingFeatures)
+
