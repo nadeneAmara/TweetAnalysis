@@ -1,6 +1,7 @@
 import twitter
 import csv
 import time
+import os.path
 
 import nltk
 import re
@@ -32,44 +33,60 @@ print(testDataSet[0:4])
 
 def buildTrainingSet(corpusFile, tweetDataFile):
 
-	corpus = []
+	# If training data file already exists, directly read from file
+	if os.path.isfile(tweetDataFile):
+		trainingDataSet = []
+		with open(tweetDataFile, 'r') as tweetData:
+			line_Reader = csv.reader(tweetData, delimiter=',', quotechar="\"")
+			for row in line_Reader:
+				trainingDataSet.append({"tweet_id":row[0], "text":row[1], "label":row[2], "topic":row[3]})
 
-	with open(corpusFile, 'r') as csvfile:
-		lineReader = csv.reader(csvfile, delimiter=',', quotechar="\"")
-		for row in lineReader:
-			corpus.append({"tweet_id":row[2], "label":row[1], "topic":row[0]})
+		return trainingDataSet
 
-	# max number of requests = 180, time window = 900s
-	rate = 180
-	sleep_time = 900/180
+	# Otherwise, gather tweet data using corpus file
+	else:
 
-	trainingDataSet = []
+		corpus = []
 
-    # using tweet id, get tweet text and store in training set
-	for tweet in corpus:
-		try:
-			status = twitter_api.GetStatus(tweet["tweet_id"])
-			print("Tweet returned " + status.text)
-			tweet["text"] = status.text
-			trainingDataSet.append(tweet)
-			time.sleep(sleep_time)
-		except:
-			continue 
+		with open(corpusFile, 'r') as csvfile:
+			lineReader = csv.reader(csvfile, delimiter=',', quotechar="\"")
+			for row in lineReader:
+				corpus.append({"tweet_id":row[2], "label":row[1], "topic":row[0]})
 
-	# write to CSV file		
-	with open(tweetDataFile, 'w') as csv_file:
-		lineWriter = csv.writer(csv_file, delimiter=',',quotechar="\"")
-		for tweet in trainingDataSet:
+		# max number of requests = 180, time window = 900s
+		rate = 180
+		sleep_time = 900/180
+
+		trainingData = []
+
+    	# using tweet id, get tweet text and store in training set
+		for tweet in corpus:
 			try:
-				lineWriter.writerow([tweet["tweet_id"], tweet["text"], tweet["label"], tweet["topic"]])
-			except Exception as e:
-				print(e)
-	return trainingDataSet
+				status = twitter_api.GetStatus(tweet["tweet_id"])
+				print("Tweet returned " + status.text)
+				tweet["text"] = status.text
+				trainingData.append(tweet)
+				time.sleep(sleep_time)
+			except:
+				continue 
 
-	
+		# write to CSV file		
+		with open(tweetDataFile, 'w') as csv_file:
+			lineWriter = csv.writer(csv_file, delimiter=',',quotechar="\"")
+			for tweet in trainingDataSet:
+				try:
+					lineWriter.writerow([tweet["tweet_id"], tweet["text"], tweet["label"], tweet["topic"]])
+				except Exception as e:
+					print(e)
+
+		return trainingDataSet
+
+
 corpusFile = "/Users/nadeneabuamara/Downloads/corpus.csv"
 tweetDataFile = "/Users/nadeneabuamara/Downloads/TweetAnalysis/tweetDataFile.csv"
 trainingData = buildTrainingSet(corpusFile, tweetDataFile)
+
+
 
 class PreProcessTweets:
 
@@ -119,4 +136,5 @@ def extract_features(tweet):
 word_features = buildVocabulary(preProcessedTrainingSet)
 trainingFeatures = apply_features(extract_features, preProcessedTrainingSet)
 
-
+#print("word features " + word_features)
+#print("\n trainingFeatures " + trainingFeatures)
