@@ -16,6 +16,9 @@ twitter_api = twitter.Api(consumer_key= 'TXX58RuQCDKrR6WKOrDSuhhTp',
 						 access_token_key= '4635485808-5TgOrcP6MPM6mWxHygSM9KR8YNLAryWFlDs1S2c',
 						 access_token_secret= 'c0XtZEzEBGsW1I0PzbdX4Y1k3ZgmMj82mMSvrIz4dSo1r')
 
+# Use words corpus because we only want English 
+words = set(nltk.corpus.words.words())
+
 def buildTestSet(search_keyword): 
 	try:
 		tweets_returned = twitter_api.GetSearch(search_keyword, count = 100)
@@ -29,7 +32,6 @@ def buildTestSet(search_keyword):
 
 search_term = input("Enter a search keyword:")
 testDataSet = buildTestSet(search_term)
-print(testDataSet[0:4])
 
 def buildTrainingSet(corpusFile, tweetDataFile):
 
@@ -96,6 +98,7 @@ class PreProcessTweets:
 	def getProcessedTweets(self, tweetList):
 		processedTweets = []
 		for tweet in tweetList:
+			tweet["text"] = " ".join(w for w in nltk.wordpunct_tokenize(tweet["text"]) if w.lower() in words or not w.isalpha())
 			processedTweets.append((self.processTweet(tweet["text"]), tweet["label"]))
 		return processedTweets
 
@@ -134,7 +137,11 @@ def extract_features(tweet):
 
 # Build feature vector
 word_features = buildVocabulary(preProcessedTrainingSet)
+print(word_features)
 trainingFeatures = apply_features(extract_features, preProcessedTrainingSet)
 
-#print("word features " + word_features)
-#print("\n trainingFeatures " + trainingFeatures)
+
+#print(trainingFeatures)
+
+
+
