@@ -104,6 +104,7 @@ class PreProcessTweets:
 
 	def processTweet(self, tweet):
 		tweet = tweet.lower() # make tweets lowercase
+		tweet = re.sub(r'[0-9\.]+', '', tweet) # remove numbers
 		tweet = re.sub('((www\.[^\s]+)|(https?://[^\s]+))', 'URL', tweet) # remove URLs
 		tweet = re.sub('@[^\s]+', 'AT_USER', tweet) # remove usernames
 		tweet = re.sub(r'#([^\s]+)', r'\1', tweet) # remove the # in hashtag
