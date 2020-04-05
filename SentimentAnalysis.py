@@ -8,6 +8,7 @@ import json
 import nltk
 import re
 from nltk.corpus import stopwords 
+from nltk import word_tokenize
 from string import punctuation 
 
 from sklearn.feature_extraction.text import CountVectorizer
@@ -76,8 +77,8 @@ def buildTrainingSet(corpusFile, tweetDataFile):
 
         return trainingDataSet
 
-corpusFile = "/Users/nadeneabuamara/Downloads/twitter-airline-sentiment/TweetAnalysis/Tweets.csv"
-tweetDataFile = "/Users/nadeneabuamara/Downloads/twitter-airline-sentiment/TweetAnalysis/tweetDataFile.csv"
+corpusFile = "data/Tweets.csv"
+tweetDataFile = "data/tweetDataFile.csv"
 trainingData = buildTrainingSet(corpusFile, tweetDataFile)
 
 # Clean up data by removing stopwords and useless characters
@@ -115,7 +116,6 @@ for (words, sentiment) in preProcessedTrainingSet:
     if (sentiment != "neutral"):
         tweetList.append(words)
         labelList.append(sentiment)
-print(labelList)
 
 # Get word frequencies, create feature vector
 vectorizer = CountVectorizer(binary=True, lowercase=True)
@@ -150,14 +150,14 @@ for ii in range(len(predicted_sentiment)):
             if (labelTest[ii] == "negative"):
                 true_negative += 1
 
+
 print('Accuracy: ')
 print(correct / len(predicted_sentiment))
 print('Positive label accuracy: ')
 print(true_positive / total_positive)
 print('Negative label accuracy: ')
 print(true_negative / total_negative)
-print('Total Negative: ')
-print(total_negative)
+
 
 
 
