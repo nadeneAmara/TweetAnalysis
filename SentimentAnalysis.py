@@ -8,8 +8,6 @@ import json
 import nltk
 import re
 from nltk.corpus import stopwords 
-from nltk.tokenize import word_tokenize 
-from nltk.classify import apply_features
 from string import punctuation 
 
 from sklearn.feature_extraction.text import CountVectorizer
@@ -78,14 +76,11 @@ def buildTrainingSet(corpusFile, tweetDataFile):
 
         return trainingDataSet
 
-
-#corpusFile = "/Users/nadeneabuamara/Downloads/corpus.csv"
-#tweetDataFile = "/Users/nadeneabuamara/Downloads/TweetAnalysis/tweetDataFile.csv"
-corpusFile = "/Users/nadeneabuamara/Downloads/twitter-airline-sentiment/Tweets.csv"
-tweetDataFile = "/Users/nadeneabuamara/Downloads/twitter-airline-sentiment/tweetDataFile.csv"
+corpusFile = "/Users/nadeneabuamara/Downloads/twitter-airline-sentiment/TweetAnalysis/Tweets.csv"
+tweetDataFile = "/Users/nadeneabuamara/Downloads/twitter-airline-sentiment/TweetAnalysis/tweetDataFile.csv"
 trainingData = buildTrainingSet(corpusFile, tweetDataFile)
 
-
+# Clean up data by removing stopwords and useless characters
 class PreProcessTweets:
 
     def __init__(self):
@@ -94,13 +89,8 @@ class PreProcessTweets:
     def getProcessedTweets(self, tweetList):
         processedTweets = []
         for tweet in tweetList:
-            #tweet["text"] = " ".join(w for w in nltk.wordpunct_tokenize(tweet["text"]) if w.lower() in words or not w.isalpha())
             processedTweets.append((self.processTweet(tweet["text"]), tweet.get("airline_sentiment")))
         return processedTweets
-
-        #processedTweets = dict()
-        #for tweet in tweetList:
-           # processedTweets.update({(self.processTweet(tweet["text"])) : tweet.get("airline_sentiment")})
 
     def processTweet(self, tweet):
         tweet = tweet.lower() # make tweets lowercase
@@ -116,24 +106,58 @@ class PreProcessTweets:
 
 tweetPreProcessor = PreProcessTweets()
 preProcessedTrainingSet = tweetPreProcessor.getProcessedTweets(trainingData)
-preProcessedTestSet = tweetPreProcessor.getProcessedTweets(testDataSet)
-
 random.shuffle(preProcessedTrainingSet)
+
 # Separate tweets from labels
 tweetList = []
 labelList = []
 for (words, sentiment) in preProcessedTrainingSet:
-    tweetList.append(words)
-    labelList.append(sentiment)
+    if (sentiment != "neutral"):
+        tweetList.append(words)
+        labelList.append(sentiment)
+print(labelList)
 
+# Get word frequencies, create feature vector
 vectorizer = CountVectorizer(binary=True, lowercase=True)
 total = vectorizer.fit_transform((np.array(tweetList)))
 
+# Split data so 80% for training, 20% for testing
 tweetTrain, tweetTest, labelTrain, labelTest = train_test_split(total, labelList, test_size=0.2, random_state=0)
 model = GaussianNB()
 model.fit(tweetTrain.toarray(), labelTrain)
 
 predicted_sentiment = model.predict(tweetTest.toarray())
+
+correct = 0
+true_positive = 0
+total_positive = 0
+true_negative = 0
+total_negative = 0
+
+# Calculate accuracies 
+for ii in range(len(predicted_sentiment)):
+
+    if (labelTest[ii] == "positive"):
+        total_positive += 1
+    else:
+        if (labelTest[ii] == "negative"):
+            total_negative +=1
+    if predicted_sentiment[ii] == labelTest[ii]:
+        correct += 1
+        if (labelTest[ii] == "positive"):
+            true_positive += 1
+        else:
+            if (labelTest[ii] == "negative"):
+                true_negative += 1
+
+print('Accuracy: ')
+print(correct / len(predicted_sentiment))
+print('Positive label accuracy: ')
+print(true_positive / total_positive)
+print('Negative label accuracy: ')
+print(true_negative / total_negative)
+print('Total Negative: ')
+print(total_negative)
 
 
 
